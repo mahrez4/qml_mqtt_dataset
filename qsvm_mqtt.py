@@ -20,6 +20,7 @@ from sklearn import metrics
 p = argparse.ArgumentParser(description="Example parameterized job")
 p.add_argument("--backend", required=False, default="CPU", type=str, help="xdd")
 p.add_argument("--encoding", required=False, default="angle", type=str, help="xdd") 
+p.add_argument("--fraction", required=False, default=0.001, type=float, help ="xdd")
 args = p.parse_args()
 
 if args.backend == "GPU":
@@ -27,6 +28,7 @@ if args.backend == "GPU":
 elif args.backend == "CPU":
     backend_type = "default.qubit"
 
+data_frac = args.fraction
 
 #feature to extract
 featurenamefile = 'Feature_name.dat'
@@ -114,7 +116,7 @@ conf_matrix = metrics.confusion_matrix(test_Y, lsvc_test_preds, labels=type_clas
 metrics.ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=type_class).plot(xticks_rotation=90)
 
 # precision_score, recall_score, fbeta_score, count = metrics.precision_recall_fscore_support(test_Y,lsvc_test_preds,labels=type_class)
-# print(precision_score, recall_score, fbeta_score)
+# print(precision_score, recall_score, diskfbeta_score)
 
 from sklearn.metrics import roc_curve,RocCurveDisplay
 roc_display = RocCurveDisplay.from_estimator(lsvc_model,test_X,test_Y)
@@ -259,7 +261,7 @@ def compute_kernel_matrix(X1, X2, weights, feature_map_type='angle'):
 
 #!/usr/bin/env python3
 # file: worker.py
-X_train, X_test, y_train, y_test = shrink_dataset_and_pca(df,NUM_QUBITS,0.0005)
+X_train, X_test, y_train, y_test = shrink_dataset_and_pca(df,NUM_QUBITS,data_frac)
 
 feature_map_type = args.encoding
 weights = np.random.uniform(low=0, high=2*np.pi, size=(NUM_QUBITS,))
