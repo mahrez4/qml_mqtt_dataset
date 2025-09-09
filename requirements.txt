@@ -1,0 +1,14 @@
+appdirs==1.4.4
+autoray==0.7.2
+custatevec-cu12==1.9.0.post0
+diastatic-malt==2.15.2
+pennylane==0.42.3
+pennylane_lightning==0.42.0
+pennylane_lightning_gpu==0.42.0
+rustworkx==0.17.1
+scipy-openblas32==0.3.30.0.2
+matplotlib
+pandas
+scikit-learn
+seaborn
+argparse
