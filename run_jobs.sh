@@ -14,5 +14,5 @@ if [ -f requirements.txt ]; then
     pip install -r requirements.txt
 fi
 
-python qsvm_mqtt.py --backend GPU --encoding angle --fraction 0.02 > qsvm_GPU_result.txt
-python qsvm_mqtt.py --backend CPU --encoding angle --fraction 0.02 > qsvm_CPU_result.txt
+python qsvm_mqtt.py --backend GPU --encoding angle --fraction 0.1 > qsvm_GPU_result.txt
+python qsvm_mqtt.py --backend CPU --encoding angle --fraction 0.1 > qsvm_CPU_result.txt

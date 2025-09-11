@@ -17,6 +17,48 @@ from sklearn.svm import LinearSVC
 from sklearn import metrics
 
 
+#function to reduce features using PCA and reduce the dataset size
+def shrink_dataset_and_pca(df,num_components,fraction):
+    # Reduce features using PCA (to keep the quantum circuit manageable)
+    pca = PCA(n_components=num_components)
+    
+    features = list(df.columns)
+    # Separating out the features
+    x = df.loc[:, features].values
+    # Separating out the target
+    y = df.loc[:,['label']].values
+    
+    # Standardizing the features
+    x = StandardScaler().fit_transform(x)
+    
+    principalComponents = pca.fit_transform(x)
+    
+    new_comps = []
+    for j in range(num_components):
+        st = "comp"+str(j)
+        new_comps.append(st)
+    
+    principalDf = pd.DataFrame(data = principalComponents, columns = new_comps)
+    num_samples = int(fraction * len(principalComponents))
+    
+    # First split: take a stratified subset
+    X_subset, _, y_subset, _ = train_test_split(
+        principalComponents, y,
+        train_size=num_samples,   # directly pick fraction
+        stratify=y,               # preserve label distribution
+        random_state=42
+    )
+    
+    # Second split: make train/test from the subset, also stratified
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_subset, y_subset,
+        test_size=0.2,
+        stratify=y_subset,
+        random_state=42
+    )
+
+    return X_train, X_test, y_train, y_test
+
 p = argparse.ArgumentParser(description="Example parameterized job")
 p.add_argument("--backend", required=False, default="CPU", type=str, help="xdd")
 p.add_argument("--encoding", required=False, default="angle", type=str, help="xdd") 
@@ -156,48 +198,6 @@ n_components = np.argmax(cumulative_variance >= threshold) + 1
 
 print(f"Number of components that explain {threshold*100}% variance: {n_components}")
 
-#function to reduce features using PCA and reduce the dataset size
-def shrink_dataset_and_pca(df,num_components,fraction):
-    # Reduce features using PCA (to keep the quantum circuit manageable)
-    pca = PCA(n_components=num_components)
-    
-    features = list(df.columns)
-    # Separating out the features
-    x = df.loc[:, features].values
-    # Separating out the target
-    y = df.loc[:,['label']].values
-    
-    # Standardizing the features
-    x = StandardScaler().fit_transform(x)
-    
-    principalComponents = pca.fit_transform(x)
-    
-    new_comps = []
-    for j in range(num_components):
-        st = "comp"+str(j)
-        new_comps.append(st)
-    
-    principalDf = pd.DataFrame(data = principalComponents, columns = new_comps)
-    num_samples = int(fraction * len(principalComponents))
-    
-    # First split: take a stratified subset
-    X_subset, _, y_subset, _ = train_test_split(
-        principalComponents, y,
-        train_size=num_samples,   # directly pick fraction
-        stratify=y,               # preserve label distribution
-        random_state=42
-    )
-    
-    # Second split: make train/test from the subset, also stratified
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_subset, y_subset,
-        test_size=0.2,
-        stratify=y_subset,
-        random_state=42
-    )
-
-    return X_train, X_test, y_train, y_test
-
 X_train, X_test, y_train, y_test = shrink_dataset_and_pca(df,8,0.002)
 print("Size of Train_set:", X_train.shape)
 print("Size of Test_set:", X_test.shape)
@@ -247,16 +247,29 @@ def quantum_kernel_element(x1, x2, dev, weights, feature_map_type='angle'):
     
     return circuit(weights)[0].item()
 
-def compute_kernel_matrix(X1, X2, weights, feature_map_type='angle'):
+def compute_kernel_matrix(X1, X2, weights, feature_map_type='angle', diff=True):
         """Compute kernel matrix using a single GPU"""
         dev = make_device()
         n1, n2 = len(X1), len(X2)
         K = np.zeros((n1, n2))
-        
-        for i in range(n1):
-            for j in range(n2):
-                K[i, j] = quantum_kernel_element(X1[i], X2[j], dev, weights, feature_map_type)
-        
+        if diff == False:
+            print("xdd")
+            for i in range(n1):
+                # Print progress after finishing each row
+                percent = ((i + 1) / n1) * 100
+                print(f"\rProgress: {percent:.2f}% ({i+1}/{n1} rows)")
+                for j in range(i + 1, n1):
+                    val = quantum_kernel_element(X1[i], X2[j], dev, weights, feature_map_type)
+                    K[i, j] = val
+                    K[j, i] = val  # mirror to exploit symmetry
+        else:
+            for i in range(n1):
+                # Print progress after finishing each row
+                percent = ((i + 1) / n1) * 100
+                print(f"\rProgress: {percent:.2f}% ({i+1}/{n1} rows)")
+                for j in range(n2):
+                    K[i, j] = quantum_kernel_element(X1[i], X2[j], dev, weights, feature_map_type)
+            
         return K
 
 #!/usr/bin/env python3
@@ -267,9 +280,15 @@ feature_map_type = args.encoding
 weights = np.random.uniform(low=0, high=2*np.pi, size=(NUM_QUBITS,))
 
 print("Computing training kernel matrix...")
-K_train = compute_kernel_matrix(X_train, X_train, weights, feature_map_type)
+K_train = compute_kernel_matrix(X_train, X_train, weights, feature_map_type, diff = False)
+
+if (np.allclose(K_train, K_train.T, rtol=1e-10, atol=1e-12)):
+    print("allclose")
+
 print("Computing test kernel matrix...")
 K_test = compute_kernel_matrix(X_test, X_train, weights, feature_map_type)
+
+
 
 # clf = SVC(kernel='precomputed', C=1.0, class_weight='balanced')
 clf = SVC(kernel='precomputed', C=1.0, class_weight='balanced')
