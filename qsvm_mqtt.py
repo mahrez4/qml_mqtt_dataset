@@ -15,7 +15,10 @@ from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.svm import LinearSVC
 from sklearn import metrics
-
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 #function to reduce features using PCA and reduce the dataset size
 def shrink_dataset_and_pca(df,num_components,fraction):
@@ -300,10 +303,39 @@ test_acc = accuracy_score(y_test, clf.predict(K_test))
 print(f"Training accuracy with {feature_map_type} feature map: {train_acc:.4f}")
 print(f"Test accuracy with {feature_map_type} feature map: {test_acc:.4f}")
 
-from sklearn.model_selection import cross_val_score
+
+## Stats 
+
+## Crossval
 scores = cross_val_score(clf, K_train, y_train, cv=5)
 print(f"Cross-validation scores: {scores.mean():.4f} ± {scores.std():.4f}")
 
+## Num vectors
+print("Number of support vectors per class:", clf.n_support_)
+print("Total number of support vectors:", len(clf.support_))
+
+##Confusion matrix
+cm = confusion_matrix(y_test, clf.predict(K_test))
+disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+disp.plot()
+
+##Precision, recall, f1-score
+print("Classification Report:")
+print(classification_report(y_test, clf.predict(K_test)))
+
+## ROC Curve & AUC
+y_scores = clf.decision_function(K_test)  # raw scores before threshold
+fpr, tpr, _ = roc_curve(y_test, y_scores)
+auc = roc_auc_score(y_test, y_scores)
+
+plt.plot(fpr, tpr, label=f"AUC = {auc:.4f}")
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend()
+plt.savefig("qsvm_roc_auc.png")       
+
+## Classic RBF kernel
 clf_classical = SVC(kernel='rbf', C=1.0, class_weight='balanced')
 clf_classical.fit(X_train, y_train)
 print(f"Classical RBF Test Accuracy: {clf_classical.score(X_test, y_test):.4f}")
