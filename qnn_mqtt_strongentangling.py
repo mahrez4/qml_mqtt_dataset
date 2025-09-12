@@ -313,6 +313,8 @@ criterion_cont = ContrastiveLoss()
 # Optional: 0.005 can be stabler for SEL depth>1
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
+start = time.time()
+
 for epoch in range(8):
     train_loss, train_acc, train_f1, _, _ = train_joint(
         model, train_loader, optimizer, criterion_cls, criterion_cont, device
@@ -321,6 +323,11 @@ for epoch in range(8):
         model, val_loader, criterion_cls, device
     )
     print(f"Epoch {epoch+1}: Train Acc={train_acc:.3f}, Val Acc={val_acc:.3f}")
+
+
+end = time.time()
+elapsed = end - start
+print(f"Total training time: {elapsed:.2f} seconds")
 
 import numpy as np
 import torch

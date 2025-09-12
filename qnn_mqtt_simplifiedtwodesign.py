@@ -314,6 +314,8 @@ DEPTH = 1
 model = QNNClassifier(n_qubits=NUM_QUBITS, num_classes=2, depth=DEPTH).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
+start = time.time()
+
 for epoch in range(8):
     train_loss, train_acc, train_f1, _, _ = train_joint(
         model, train_loader, optimizer, criterion_cls, criterion_cont, device
@@ -323,6 +325,9 @@ for epoch in range(8):
     print(f"Epoch {epoch+1}: Train Acc={train_acc:.3f}, Val Acc={val_acc:.3f}")
 
 
+end = time.time()
+elapsed = end - start
+print(f"Total training time: {elapsed:.2f} seconds")
 import numpy as np
 import torch
 import torch.nn.functional as F

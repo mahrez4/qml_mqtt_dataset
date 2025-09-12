@@ -305,7 +305,8 @@ criterion_cls = nn.CrossEntropyLoss()
 criterion_cont = ContrastiveLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-# Train loop (example)
+start = time.time()
+# Train loop
 for epoch in range(8):
     train_loss, train_acc, train_f1, _, _ = train_joint(
         model, train_loader, optimizer, criterion_cls, criterion_cont, device
@@ -314,6 +315,10 @@ for epoch in range(8):
 
     print(f"Epoch {epoch+1}: Train Acc={train_acc:.3f}, Val Acc={val_acc:.3f}")
 
+
+end = time.time()
+elapsed = end - start
+print(f"Total training time: {elapsed:.2f} seconds")
 
 import numpy as np
 import torch
