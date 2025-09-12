@@ -36,14 +36,14 @@ args = p.parse_args()
 
 data_frac = args.fraction
 #feature to extract
-featurenamefile = '/kaggle/input/feature-name/Feature_name.dat'
+featurenamefile = 'Feature_name.dat'
 with open(featurenamefile) as file:
     feature_name = [line.rstrip() for line in file]
 file.close()
 ft_dict = {key: i for i, key in enumerate(feature_name)}
 n_feature = len(feature_name)
 
-filename='/kaggle/input/ids-linh/captured_dataset_07-04-2023_1226.csv'
+filename='captured_dataset_07-04-2023_1226.csv'
 df = pd.read_csv(filename,na_values='',low_memory=False,names=feature_name, header=None)
 df.head(5)
 
