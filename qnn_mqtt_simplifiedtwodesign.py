@@ -312,6 +312,9 @@ device = torch.device("cuda" if (torch.cuda.is_available() and args.backend == "
 DEPTH = 1
 
 model = QNNClassifier(n_qubits=NUM_QUBITS, num_classes=2, depth=DEPTH).to(device)
+criterion_cls  = nn.CrossEntropyLoss()
+criterion_cont = ContrastiveLoss()
+
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
 start = time.time()
