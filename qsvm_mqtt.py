@@ -303,7 +303,7 @@ end = time.time()
 elapsed = end - start
 print(f"Total training time: {elapsed:.2f} seconds")
 
-parameters_extension=args.backend+"_"+args.encoding+"_"+    str(args.fraction)
+parameters_extension=args.backend+"_"+args.encoding+"_"+str(args.fraction)
 model_name = "svc_model"+"_"+parameters_extension+".pkl"
 joblib.dump(clf, model_name)
 
