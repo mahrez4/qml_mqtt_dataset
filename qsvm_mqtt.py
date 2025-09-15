@@ -303,6 +303,9 @@ end = time.time()
 elapsed = end - start
 print(f"Total training time: {elapsed:.2f} seconds")
 
+parameters_extension=args.backend+"_"+args.encoding+"_"+    str(args.fraction)
+model_name = "svc_model"+"_"+parameters_extension+".pkl"
+joblib.dump(clf, model_name)
 
 train_acc = accuracy_score(y_train, clf.predict(K_train))
 test_acc = accuracy_score(y_test, clf.predict(K_test))
@@ -340,7 +343,8 @@ plt.plot([0, 1], [0, 1], 'k--')
 plt.xlabel("False Positive Rate")
 plt.ylabel("True Positive Rate")
 plt.legend()
-plt.savefig("qsvm_roc_auc.png")       
+fig_name = "qsvm_roc_auc"+"_"+parameters_extension+".png"
+plt.savefig(fig_name)       
 
 ## Classic RBF kernel
 clf_classical = SVC(kernel='rbf', C=1.0, class_weight='balanced')
