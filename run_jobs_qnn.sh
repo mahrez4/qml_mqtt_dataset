@@ -16,7 +16,7 @@ fi
 
 python qnn_mqtt_strongentangling.py --backend GPU --fraction 0.01 | tee qnn_mqtt_gpu_strongentangle.txt
 python qnn_mqtt_basicentangler.py --backend GPU --fraction 0.01 | tee qnn_mqtt_gpu_basicentangler.txt
-python qnn_mqtt_simplifiedtwodesign.py --backend GPU --fraction 0.01 | tee qnn_mqtt_gpu_cat rsimplifiedtwodesign.txt
+python qnn_mqtt_simplifiedtwodesign.py --backend GPU --fraction 0.01 | tee qnn_mqtt_gpu_simplifiedtwodesign.txt
 
 python qnn_mqtt_strongentangling.py --backend CPU --fraction 0.01 | tee qnn_mqtt_cpu_strongentangle.txt
 python qnn_mqtt_basicentangler.py --backend CPU --fraction 0.01 | tee qnn_mqtt_cpu_basicentangler.txt
