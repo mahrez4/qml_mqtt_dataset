@@ -282,6 +282,8 @@ X_train, X_test, y_train, y_test = shrink_dataset_and_pca(df,NUM_QUBITS,data_fra
 feature_map_type = args.encoding
 weights = np.random.uniform(low=0, high=2*np.pi, size=(NUM_QUBITS,))
 
+
+start = time.time()
 print("Computing training kernel matrix...")
 K_train = compute_kernel_matrix(X_train, X_train, weights, feature_map_type, diff = False)
 
@@ -296,6 +298,11 @@ K_test = compute_kernel_matrix(X_test, X_train, weights, feature_map_type)
 # clf = SVC(kernel='precomputed', C=1.0, class_weight='balanced')
 clf = SVC(kernel='precomputed', C=1.0, class_weight='balanced')
 clf.fit(K_train, y_train)
+
+end = time.time()
+elapsed = end - start
+print(f"Total training time: {elapsed:.2f} seconds")
+
 
 train_acc = accuracy_score(y_train, clf.predict(K_train))
 test_acc = accuracy_score(y_test, clf.predict(K_test))
