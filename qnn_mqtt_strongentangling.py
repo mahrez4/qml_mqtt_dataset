@@ -32,6 +32,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 p = argparse.ArgumentParser(description="Example parameterized job")
 p.add_argument("--backend", required=False, default="CPU", type=str, help="xdd")
 p.add_argument("--fraction", required=False, default=0.001, type=float, help ="xdd")
+p.add_argument("--layers", required=False, default=1, type=int, help="Number of Layers (depth)")
 args = p.parse_args()
 
 data_frac = args.fraction
@@ -304,7 +305,7 @@ val_loader   = DataLoader(test_set,   batch_size=16)
 
 device = torch.device("cuda" if (torch.cuda.is_available() and args.backend == "GPU") else "cpu")
 
-DEPTH = 1
+DEPTH = args.layers
 model = QNNClassifier(n_qubits=NUM_QUBITS, num_classes=2, depth=DEPTH).to(device)
 
 criterion_cls  = nn.CrossEntropyLoss()

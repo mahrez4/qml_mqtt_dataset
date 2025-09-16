@@ -15,4 +15,4 @@ if [ -f requirements.txt ]; then
 fi
 
 PYTHONUNBUFFERED=1 python qsvm_mqtt.py --backend GPU --encoding angle --fraction 0.1 | tee qsvm_GPU_result.txt
-PYTHONUNBUFFERED=1 python qsvm_mqtt.py --backend CPU --encoding angle --fraction 0.1 | tee qsvm_CPU_result.txtg
+PYTHONUNBUFFERED=1 python qsvm_mqtt.py --backend CPU --encoding angle --fraction 0.1 | tee qsvm_CPU_result.txt

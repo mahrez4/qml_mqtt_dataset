@@ -32,6 +32,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 p = argparse.ArgumentParser(description="Example parameterized job")
 p.add_argument("--backend", required=False, default="CPU", type=str, help="xdd")
 p.add_argument("--fraction", required=False, default=0.001, type=float, help ="xdd")
+p.add_argument("--layers", required=False, default=1, type=int, help="Number of Layers (depth)")
 args = p.parse_args()
 
 data_frac = args.fraction
@@ -186,27 +187,37 @@ train_set, test_set = torch.utils.data.random_split(dataset, [train_size, test_s
 # ======================================================
 # Quantum Node
 # ======================================================
-def create_qnode(n_qubits=NUM_QUBITS):
+def create_qnode(n_qubits=NUM_QUBITS, n_layers=1):
+    # guardrail to avoid invalid shapes
+    n_layers = max(1, int(n_layers))
+
     dev = qml.device("default.qubit", wires=n_qubits)
 
     @qml.qnode(dev, interface="torch", diff_method="backprop")
     def qnode(inputs, weights):
+        # inputs: shape (n_qubits,)
+        # weights: shape (n_layers, n_qubits)
         qml.templates.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
         qml.templates.BasicEntanglerLayers(weights, wires=range(n_qubits))
         return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
 
-    return qnode
+    return qnode, n_layers
 
 
 # ======================================================
 # Quantum Classifier (no MIL)
 # ======================================================
 class QNNClassifier(nn.Module):
-    def __init__(self, n_qubits=NUM_QUBITS, num_classes=4):
+    def __init__(self, n_qubits=NUM_QUBITS, n_layers=1, num_classes=2):
         super().__init__()
         self.n_qubits = n_qubits
-        self.qnode = create_qnode(n_qubits)
-        weight_shapes = {"weights": (1, n_qubits)}
+
+        # Build qnode + keep normalized layer count
+        self.qnode, self.n_layers = create_qnode(n_qubits, n_layers)
+
+        # Weight shape must match BasicEntanglerLayers expectation
+        weight_shapes = {"weights": (self.n_layers, n_qubits)}
+
         self.q_layer = qml.qnn.TorchLayer(self.qnode, weight_shapes)
         self.classifier = nn.Linear(n_qubits, num_classes)
 
@@ -215,7 +226,7 @@ class QNNClassifier(nn.Module):
         x = x[:, :self.n_qubits]  # trim if > n_qubits
         q_out = self.q_layer(x)
         return self.classifier(q_out)
-   
+
 
 # ======================================================
 # Contrastive Loss
@@ -298,8 +309,10 @@ train_loader = DataLoader(train_set, batch_size=16, shuffle=True)
 val_loader = DataLoader(test_set, batch_size=16)
 
 # Model + training setup
+DEPTH = args.layers
+
 device = torch.device("cuda" if (torch.cuda.is_available() and args.backend == "GPU") else "cpu")
-model = QNNClassifier(n_qubits=NUM_QUBITS, num_classes=2).to(device)
+model = QNNClassifier(n_qubits=NUM_QUBITS, n_layers=DEPTH, num_classes=2).to(device)
 
 criterion_cls = nn.CrossEntropyLoss()
 criterion_cont = ContrastiveLoss()
