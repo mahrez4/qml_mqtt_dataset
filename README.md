@@ -1,1 +1,6 @@
-QML algorithms for mqtt dataset
+QML algorithms for an MQTT traffic capture.
+
+Includes:
+- QSVM
+- QNN
+- QLSTM
